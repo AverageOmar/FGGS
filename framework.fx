@@ -16,6 +16,10 @@ cbuffer ConstantBuffer : register( b0 )
 	float4 DiffuseLight;
 	float4 AmbientMtrl;
 	float4 AmbientLight;
+	float4 SpecularMtrl;
+	float4 SpecularLight;
+	float SpecularPower;
+	float3 EyePosW;
 	float3 LightVecW;
 }
 
@@ -34,9 +38,13 @@ VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL ) //direct correlat
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Pos = mul( Pos, World );
     output.Pos = mul( output.Pos, View );
-    output.Pos = mul( output.Pos, Projection );
-
 	//--
+	EyePosW = output.Pos - World;
+	float3 toEye = normalize(EyePosW - output.Pos.xyz);
+
+	output.Pos = mul(output.Pos, Projection);
+
+
 	float3 normalW = mul(float4(NormalL, 0.0f), World).xyz;
 	normalW = normalize(normalW);
 
