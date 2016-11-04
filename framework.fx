@@ -37,15 +37,16 @@ VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL ) //direct correlat
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Pos = mul( Pos, World );
-    output.Pos = mul( output.Pos, View );
 	//--
-	EyePosW = output.Pos - World;
+	EyePosW = output.Pos - View;
 	float3 toEye = normalize(EyePosW - output.Pos.xyz);
 
+	output.Pos = mul( output.Pos, View );
 	output.Pos = mul(output.Pos, Projection);
 
+	float4 normL = float4(NormalL, 0.0f);
 
-	float3 normalW = mul(float4(NormalL, 0.0f), World).xyz;
+	float3 normalW = mul(normL, World).xyz;
 	normalW = normalize(normalW);
 
 	float3 lightVec = normalize(LightVecW);
