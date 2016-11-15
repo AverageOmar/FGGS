@@ -27,7 +27,8 @@ cbuffer ConstantBuffer : register( b0 )
 struct VS_OUTPUT
 {
     float4 Pos : SV_POSITION;
-    float4 Color : COLOR0;
+    float4 Color : COLOR0; // Replace with Normal in World space
+	// Add position in world space
 };
 
 //--------------------------------------------------------------------------------------
@@ -38,24 +39,28 @@ VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL ) //direct correlat
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Pos = mul( Pos, World );
 	//--
-	EyePosW = output.Pos - View;
-	float3 toEye = normalize(EyePosW - output.Pos.xyz);
+	float3 toEye = normalize(EyePosW - output.Pos.xyz); // Move to PS
 
 	output.Pos = mul( output.Pos, View );
 	output.Pos = mul(output.Pos, Projection);
 
-	float4 normL = float4(NormalL, 0.0f);
-
-	float3 normalW = mul(normL, World).xyz;
-	normalW = normalize(normalW);
-
 	float3 lightVec = normalize(LightVecW);
 
-	float diffuseAmount = max(dot(lightVec, normalW), 0.0f);
-	float3 ambient = AmbientMtrl * AmbientLight;
-	float3 diffuse = diffuseAmount * (DiffuseMtrl * DiffuseLight);
+	// leave in VS
+	float3 normalW = mul(float4(NormalL, 0.0f), World).xyz;
+	normalW = normalize(normalW);
+	// end
 
-	output.Color.rgb = ambient + diffuse;
+	float3 r = reflect(-lightVec, normalW);
+	float specularAmount = pow(max(dot(r, toEye), 0.0f), SpecularPower);
+
+	float3 specular = specularAmount * (SpecularMtrl * SpecularLight).rgb;
+
+	float diffuseAmount = max(dot(lightVec, normalW), 0.0f);
+	float3 ambient = (AmbientMtrl * AmbientLight).rgb;
+	float3 diffuse = diffuseAmount * (DiffuseMtrl * DiffuseLight).rgb;
+
+	output.Color.rgb = ambient + diffuse + specular;
 	output.Color.a = DiffuseMtrl.a;
 
 	//--
