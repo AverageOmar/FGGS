@@ -24,6 +24,10 @@ struct ConstantBuffer
 	XMFLOAT4 DiffuseLight;
 	XMFLOAT4 AmbientMaterial;
 	XMFLOAT4 AmbientLight;
+	XMFLOAT4 SpecularMtrl;
+	XMFLOAT4 SpecularLight;
+	FLOAT SpecularPower;
+	XMFLOAT3 EyePosW;
 	XMFLOAT3 LightVecW;
 };
 
@@ -58,6 +62,9 @@ private:
 	XMFLOAT4 diffuseLight;
 	XMFLOAT4 ambientMaterial;
 	XMFLOAT4 ambientLight;
+	XMFLOAT4 specularLight;
+	XMFLOAT4 specularMaterial;
+	FLOAT specularPower;
 
 private:
 	HRESULT InitWindow(HINSTANCE hInstance, int nCmdShow);
