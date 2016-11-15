@@ -597,7 +597,18 @@ void Application::Draw()
 
 	//ambient light
 	ambientLight = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0);
+	
+	//specular light
+	specularLight = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//specular material
+	specularMaterial = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//specular power
+	specularPower = FLOAT(10.0f);
 	//--
+
+	
 	
 	//
     // Update variables
@@ -613,6 +624,11 @@ void Application::Draw()
 
 	cb.AmbientLight = ambientLight;
 	cb.AmbientMaterial = ambientMaterial;
+
+	cb.SpecularLight = specularLight;
+	cb.SpecularMtrl = specularMaterial;
+	cb.SpecularPower = specularPower;
+	cb.EyePosW = XMFLOAT3(0.0f, 0.0f, -6.0f);
 	//--
 
 	//copies the constant buffer to shaders
@@ -629,6 +645,7 @@ void Application::Draw()
     //
 	_pImmediateContext->VSSetShader(_pVertexShader, nullptr, 0);
 	_pImmediateContext->VSSetConstantBuffers(0, 1, &_pConstantBuffer);
+	_pImmediateContext->PSSetConstantBuffers(0, 1, &_pConstantBuffer);
 	_pImmediateContext->PSSetShader(_pPixelShader, nullptr, 0);
 	_pImmediateContext->DrawIndexed(36, 0, 0);        
 
