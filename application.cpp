@@ -584,10 +584,10 @@ void Application::Draw()
     
 	//--
 	//light direction
-	lightDirection = XMFLOAT3(0.25f, 0.5f, -1.0f);
+	lightDirection = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 	//diffuse material properties
-	diffuseMaterial = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	diffuseMaterial = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
 
 	//diffuse light colour
 	diffuseLight = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -599,13 +599,13 @@ void Application::Draw()
 	ambientLight = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0);
 	
 	//specular light
-	specularLight = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	specularLight = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 
 	//specular material
 	specularMaterial = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//specular power
-	specularPower = FLOAT(10.0f);
+	specularPower = FLOAT(5.0f);
 	//--
 
 	
