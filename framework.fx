@@ -4,9 +4,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 
+Texture2D txDiffuse : register ( t0 );
+SamplerState samLinear : register ( s0 );
+
 //--------------------------------------------------------------------------------------
 // Constant Buffer Variables
 //--------------------------------------------------------------------------------------
+
 cbuffer ConstantBuffer : register( b0 )
 {
 	matrix World;
@@ -28,19 +32,20 @@ struct VS_OUTPUT
 {
     float4 Pos : SV_POSITION;
     float4 Color : COLOR0;
+	float2 Tex : TEXCOORD0;
 
 	float3 NormalW : NORMAL;
 	float4 PosW : POSITION;
 
-	// Replace with Normal in World space
-	// Add position in world space
 };
 
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
-VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL ) //direct correlation in order
+VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL, float2 Tex : TEXCOORD0) //direct correlation in order
 {
+	float4 textureColour = txDiffuse.Sample(samLinear, Tex);
+
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Pos = mul( Pos, World );
 	
@@ -54,6 +59,7 @@ VS_OUTPUT VS( float4 Pos : POSITION, float3 NormalL : NORMAL ) //direct correlat
 	output.NormalW = normalize(normalW);
 	// end
 
+	output.Tex = Tex;
 	//--
     return output;
 }
@@ -74,7 +80,9 @@ float4 PS( VS_OUTPUT input ) : SV_Target
 	float diffuseAmount = max(dot(lightVec, normalW), 0.0f);
 
 	if (diffuseAmount <= 0.0f)
+	{
 		specularAmount = 0.0f;
+	}
 
 	float3 ambient = (AmbientMtrl * AmbientLight).rgb;
 	float3 diffuse = diffuseAmount * (DiffuseMtrl * DiffuseLight).rgb;
