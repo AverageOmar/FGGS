@@ -133,6 +133,7 @@ HRESULT Application::InitShadersAndInputLayout()
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, //3 sets of 32 bit float data
         { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }, //Normalised vertexes
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0} //Texel Coordinate data
 	};
 
 	UINT numElements = ARRAYSIZE(layout);
@@ -158,10 +159,10 @@ HRESULT Application::InitVertexBuffer()
     // Create vertex buffer
     SimpleVertex vertices[] =
     {
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT3(-2.0f, 2.0f, -2.0f) }, //0
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT3(2.0f, 2.0f, -2.0f) }, //1
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT3(-2.0f, -2.0f, -2.0f) }, //2
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT3(2.0f, -2.0f, -2.0f) }, //3
+        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT3(-2.0f, 2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //0
+        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT3(2.0f, 2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //1
+        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 0.0f) }, //2
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 0.0f) }, //3
 
 		{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-2.0f, 2.0f, 2.0f) }, //4
 		{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f) }, //5
