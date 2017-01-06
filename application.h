@@ -2,17 +2,21 @@
 
 #include <windows.h>
 #include <d3d11_1.h>
+#include <dinput.h>
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <directxcolors.h>
 #include "resource.h"
+#include "DDSTextureLoader.h"
+
 
 using namespace DirectX;
 
 struct SimpleVertex
 {
-    XMFLOAT3 Pos;
+	XMFLOAT3 Pos;
 	XMFLOAT3 Normal;
+	XMFLOAT2 TexC;
 };
 
 struct ConstantBuffer
@@ -65,6 +69,34 @@ private:
 	XMFLOAT4 specularLight;
 	XMFLOAT4 specularMaterial;
 	FLOAT specularPower;
+
+	XMVECTOR Eye;
+	float eyex;
+	float eyey;
+	float eyez;
+
+	float eyex2;
+	float eyey2;
+	float eyez2;
+
+	XMVECTOR At;
+	float atx;
+	float aty;
+	float atz;
+
+	float atx2;
+	float aty2;
+	float atz2;
+
+	XMVECTOR Up;
+
+	int keyState;
+	bool shiftCamera;
+
+	/*ID3D11Texture2D* texture;*/
+	ID3D11ShaderResourceView * _pTextureRV = nullptr;
+	ID3D11SamplerState * _pSamplerLinear = nullptr;
+
 
 private:
 	HRESULT InitWindow(HINSTANCE hInstance, int nCmdShow);
