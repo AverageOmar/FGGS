@@ -1,5 +1,6 @@
 #include "Application.h"
 
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
@@ -42,6 +43,9 @@ Application::Application()
 
 	_pVertexBufferTri = nullptr;
 	_pIndexBufferTri = nullptr;
+
+	keyState = 0;
+	shiftCamera = false;
 }
 
 Application::~Application()
@@ -73,10 +77,26 @@ HRESULT Application::Initialise(HINSTANCE hInstance, int nCmdShow)
 	XMStoreFloat4x4(&_world, XMMatrixIdentity());
 	XMStoreFloat4x4(&_world2, XMMatrixIdentity());
 
+	eyex = 0.0f;
+	eyey = 0.0f;
+	eyez = -10.0f;
+
+	atx = 0.0f;
+	aty = 0.0f;
+	atz = 0.0f;
+
+	eyex2 = 0.0f;
+	eyey2 = 0.0f;
+	eyez2 = -10.0f;
+
+	atx2 = 0.0f;
+	aty2 = 0.0f;
+	atz2 = 0.0f;
+
     // Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet(0.0f, 0.0f, -6.0f, 0.0f);
-	XMVECTOR At = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	Eye = XMVectorSet(eyex, eyey, eyez, 0.0f);
+	At = XMVectorSet(atx, aty, atz, 0.0f);
+	Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	XMStoreFloat4x4(&_view, XMMatrixLookAtLH(Eye, At, Up));
 
@@ -159,23 +179,47 @@ HRESULT Application::InitVertexBuffer()
     // Create vertex buffer
     SimpleVertex vertices[] =
     {
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT3(-2.0f, 2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //0
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT3(2.0f, 2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //1
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 0.0f) }, //2
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 0.0f) }, //3
+		// Front Face
+        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT3(-2.0f, 2.0f, -2.0f), XMFLOAT2(0.0f, 0.0f) }, //0
+        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT3(2.0f, 2.0f, -2.0f), XMFLOAT2(1.0f, 0.0f) }, //1
+        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //2
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //3
 
-		{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-2.0f, 2.0f, 2.0f) }, //4
-		{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f) }, //5
-		{ XMFLOAT3(-1.0f, -1.0f, 1.0f),XMFLOAT3(-2.0f, -2.0f, 2.0f) }, //6
-		{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(2.0f, -2.0f, 2.0f) }, //7
+		// Right Face
+		{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(2.0f, 2.0f, -2.0f), XMFLOAT2(0.0f, 0.0f) }, //4
+		{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(1.0f, 0.0f) }, //5
+		{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //6
+		{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(2.0f, -2.0f, 2.0f), XMFLOAT2(1.0f, 1.0f) }, //7
 
+		// Back Face
+		{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(0.0f, 0.0f) }, //8
+		{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(1.0f, 0.0f) }, //9
+		{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(2.0f, -2.0f, 2.0f), XMFLOAT2(0.0f, 1.0f) }, //10
+		{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //11
 
+		// Left Face
+		{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(0.0f, 0.0f) }, //12
+		{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-2.0f, 2.0f, -2.0f), XMFLOAT2(1.0f, 0.0f) }, //13
+		{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //14
+		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //15
+
+		// Top Face
+		{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(0.0f, 0.0f) }, //16
+		{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(2.0f, 2.0f, 2.0f), XMFLOAT2(1.0f, 0.0f) }, //17
+		{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-2.0f, 2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //18
+		{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(2.0f, 2.0f, -2.0f), XMFLOAT2(1.0f, 1.0f) }, //19
+
+		// Bottom Face
+		{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 0.0f) }, //20
+		{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT2(1.0f, 0.0f) }, //21
+		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT2(0.0f, 1.0f) }, //22
+		{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(2.0f, -2.0f, 2.0f), XMFLOAT2(1.0f, 1.0f) }, //23
     };
 
     D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(SimpleVertex) * 8;
+    bd.ByteWidth = sizeof(SimpleVertex) * 24;
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
@@ -196,21 +240,19 @@ HRESULT Application::InitVertexBufferTri()
 {
 	HRESULT hr;
 
-	// Create vertex buffer
-	SimpleVertex vertices[] =
+	static SimpleVertex vertices[4] =
 	{
-		{ XMFLOAT3(-1.0f, -1.0f, -1.0f),  XMFLOAT3(-2.0f, -2.0f, -2.0f) }, //0
-		{ XMFLOAT3(1.0f, -1.0f, -1.0f),  XMFLOAT3(2.0f, -2.0f, -2.0f) }, //1
-		{ XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT3(-2.0f, -2.0f, 2.0f) }, //2
-		{ XMFLOAT3(1.0f, -1.0f, 1.0f),  XMFLOAT3(2.0f, -2.0f, 2.0f) }, //3
-		{ XMFLOAT3(0.0f, 1.0f, 0.0f),  XMFLOAT3(0.0f, 2.0f, 0.0f) }, //4
-
+		// Top Face
+		{ XMFLOAT3(-2.0f, -2.0f, -2.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(0.0f, 0.0f) }, //0
+		{ XMFLOAT3(2.0f, -2.0f, -2.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(10.0f, 0.0f) }, //1
+		{ XMFLOAT3(-2.0f, -2.0f, 2.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(0.0f, 10.0f) }, //2
+		{ XMFLOAT3(2.0f, -2.0f, 2.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(10.0f, 10.0f) }, //3
 	};
 
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(SimpleVertex) * 5;
+	bd.ByteWidth = sizeof(SimpleVertex) * 4;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
@@ -230,28 +272,25 @@ HRESULT Application::InitIndexBufferTri()
 {
 	HRESULT hr;
 
-	// Create index buffer
 	WORD indices[] =
 	{
-		4,3,2,
-		4,2,0,
-		4,0,1,
-		4,1,3,
-		3,2,1,
-		2,0,1,
+		//floor
+		0, 1, 2,
+		2, 1, 3,
 	};
 
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
 
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(WORD) * 18;
+	bd.ByteWidth = sizeof(WORD) * 6;
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA InitData;
 	ZeroMemory(&InitData, sizeof(InitData));
 	InitData.pSysMem = indices;
+
 	hr = _pd3dDevice->CreateBuffer(&bd, &InitData, &_pIndexBufferTri);
 
 	if (FAILED(hr))
@@ -269,23 +308,23 @@ HRESULT Application::InitIndexBuffer()
     WORD indices[] =
     {
 		//front
-        0,1,2,
-        2,1,3,
+        0, 1, 2,
+		2, 1, 3,
+		// right
+		4, 5, 6,
+		6, 5, 7,
 		//back
-		4,6,5,
-		6,7,5,
-		//top
-		5,1,0,
-		5,0,4,
-		//bottom
-		3,7,2,
-		2,7,6,
-		//right
-		1,5,3,
-		3,5,7,
+		8, 9, 10,
+		10, 9, 11,
 		//left
-		4,0,6,
-		6,0,2,
+		12, 13, 14,
+		14, 13, 15,
+		//top
+		16, 17, 18,
+		18, 17, 19,
+		//bottom
+		20, 21, 22,
+		20, 23, 21,
     };
 
 	D3D11_BUFFER_DESC bd;
@@ -514,6 +553,18 @@ HRESULT Application::InitDevice()
     if (FAILED(hr))
         return hr;
 
+	D3D11_SAMPLER_DESC sampDesc;
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	_pd3dDevice->CreateSamplerState(&sampDesc, &_pSamplerLinear);
+
     return S_OK;
 }
 
@@ -562,11 +613,244 @@ void Application::Update()
         t = (dwTimeCur - dwTimeStart) / 1000.0f;
     }
 
-    //
-    // Animate the cube
-    //
-	XMStoreFloat4x4(&_world, XMMatrixRotationX(t) * XMMatrixRotationY(t) * XMMatrixRotationZ(t) * XMMatrixTranslation(2.0f, 0.0f, 0.0f)  * XMMatrixRotationY(t));
-	XMStoreFloat4x4(&_world2, XMMatrixRotationX(-t) * XMMatrixRotationY(-t) * XMMatrixRotationZ(-t) * XMMatrixTranslation(-2.0f, 0.0f, 0.0f)  * XMMatrixRotationY(t));
+	if (keyState == 0 || keyState == 1)
+	{
+		XMVECTOR Eye = XMVectorSet(eyex, eyey, eyez, 0.0f);
+		XMVECTOR At = XMVectorSet(atx, aty, atz, 0.0f);
+		XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+		XMStoreFloat4x4(&_view, XMMatrixLookAtLH(Eye, At, Up));
+	}
+	if (keyState == 2 || keyState == 3)
+	{
+		XMVECTOR Eye2 = XMVectorSet(eyex2, eyey2, eyez2, 0.0f);
+		XMVECTOR At2 = XMVectorSet(atx2, aty2, atz2, 0.0f);
+		XMVECTOR Up2 = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+		XMStoreFloat4x4(&_view, XMMatrixLookAtLH(Eye2, At2, Up2));
+	}
+
+	float moveX = atx - eyex;
+	float moveY = aty - eyey;
+	float moveZ = atz - eyez;
+	float move = (moveX * moveX) + (moveY * moveY) + (moveZ * moveZ);
+	float mover = sqrt(move);
+	moveX = moveX / (mover * 100);
+	moveY = moveY / (mover * 100);
+	moveZ = moveZ / (mover * 100);
+
+	float moveX2 = atx2 - eyex2;
+	float moveY2 = aty2 - eyey;
+	float moveZ2 = atz2 - eyez;
+	float move2 = (moveX2 * moveX2) + (moveY2 * moveY2) + (moveZ2 * moveZ2);
+	float mover2 = sqrt(move2);
+	moveX2 = moveX2 / (mover2 * 100);
+	moveY2 = moveY2 / (mover2 * 100);
+	moveZ2 = moveZ2 / (mover2 * 100);
+
+
+	if (GetAsyncKeyState(VK_UP))
+	{
+		if (keyState == 0 || keyState == 1 || keyState == 3)
+		{
+			eyez = eyez + moveZ;
+			eyex = eyex + moveX;
+			atz = atz + moveZ;
+			atx = atx + moveX;
+		}
+		if (keyState == 2)
+		{
+			aty2 = aty2 + 0.05f;
+		}
+	}
+
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		if (keyState == 0 || keyState == 1 || keyState == 3)
+		{
+			eyez = eyez - moveZ;
+			eyex = eyex - moveX;
+			atz = atz - moveZ;
+			atx = atx - moveX;
+		}
+		if (keyState == 2)
+		{
+			aty2 = aty2 - 0.05f;
+		}
+	}
+
+	if (GetAsyncKeyState(VK_RIGHT))
+	{
+		if (keyState == 0 || keyState == 1 || keyState == 3)
+		{
+			if ((atz >= eyez) && (atx <= eyex))
+			{
+				atx += 0.1f;
+				atz += 0.1f;
+			}
+			if ((atz <= eyez) && (atx <= eyex))
+			{
+				atx -= 0.1f;
+				atz += 0.1f;
+			}
+			if ((atz <= eyez) && (atx >= eyex))
+			{
+				atx -= 0.1f;
+				atz -= 0.1f;
+			}
+			if ((atz >= eyez) && (atx >= eyex))
+			{
+				atx += 0.1f;
+				atz -= 0.1f;
+			}
+		}
+		if (keyState == 2)
+		{
+			if ((atz2 >= eyez2) && (atx2 <= eyex2))
+			{
+				atx2 += 0.1f;
+				atz2 += 0.1f;
+			}
+			if ((atz <= eyez) && (atx2 <= eyex))
+			{
+				atx2 -= 0.1f;
+				atz2 += 0.1f;
+			}
+			if ((atz2 <= eyez) && (atx2 >= eyex))
+			{
+				atx2 -= 0.1f;
+				atz2 -= 0.1f;
+			}
+			if ((atz2 >= eyez) && (atx2 >= eyex))
+			{
+				atx2 += 0.1f;
+				atz2 -= 0.1f;
+			}
+		}
+	}
+
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		if (keyState == 0 || keyState == 1 || keyState == 3)
+		{
+			if ((atz >= eyez) && (atx <= eyex))
+			{
+				atx -= 0.1f;
+				atz -= 0.1f;
+			}
+			if ((atz <= eyez) && (atx <= eyex))
+			{
+				atx += 0.1f;
+				atz -= 0.1f;
+			}
+			if ((atz <= eyez) && (atx >= eyex))
+			{
+				atx += 0.1f;
+				atz += 0.1f;
+			}
+			if ((atz >= eyez) && (atx >= eyex))
+			{
+				atx -= 0.1f;
+				atz += 0.1f;
+			}
+		}
+		if (keyState == 2)
+		{
+			if ((atz2 >= eyez) && (atx2 <= eyex))
+			{
+				atx2 -= 0.1f;
+				atz2 -= 0.1f;
+			}
+			if ((atz2 <= eyez) && (atx2 <= eyex))
+			{
+				atx2 += 0.1f;
+				atz2 -= 0.1f;
+			}
+			if ((atz2 <= eyez) && (atx2 >= eyex))
+			{
+				atx2 += 0.1f;
+				atz2 += 0.1f;
+			}
+			if ((atz2 >= eyez) && (atx2 >= eyex))
+			{
+				atx2 -= 0.1f;
+				atz2 += 0.1f;
+			}
+		}
+	}
+
+	if (GetAsyncKeyState(VK_SPACE))
+	{
+		if (keyState == 2)
+		{
+			eyex2 = eyex2 + moveX2;
+			atx2 = atx2 + moveX2;
+			eyey2 = eyey2 + moveY2;
+			aty2 = aty2 + moveY2;
+			eyez2 = eyez2 + moveZ2;
+			atz2 = atz2 + moveZ2;
+		}
+	}
+
+	if (GetAsyncKeyState(VK_NUMPAD0))
+	{
+		keyState = 0;
+		if (eyey < -0.1f)
+		{
+			eyey = eyey + 1.5f;
+			eyex = eyex - (moveX / 10);
+			eyez = eyez - (moveZ / 10);
+			aty = aty + 0.05f;
+			atx = atx - (moveX / 10);
+			atz = atz - (moveZ / 10);
+		}
+	}
+	if (GetAsyncKeyState(VK_NUMPAD1))
+	{
+		keyState = 1;
+		if (eyey > -0.1f)
+		{
+			eyey = eyey - 1.5f;
+			eyex = eyex + (moveX / 10);
+			eyez = eyez + (moveZ / 10);
+			aty = aty - 0.05f;
+			atx = atx + (moveX / 10);
+			atz = atz + (moveZ / 10);
+		}
+	}
+	if (GetAsyncKeyState(VK_NUMPAD2))
+	{
+		keyState = 2;
+	}
+	if (GetAsyncKeyState(VK_NUMPAD3))
+	{
+		keyState = 3;
+		eyex2 = eyex;
+		eyey2 = eyey;
+		eyez2 = eyez;
+	}
+
+	if (keyState == 3)
+	{
+		XMStoreFloat4x4(&_world, XMMatrixTranslation(eyex, eyey - 1.5f, eyez));
+	}
+	if (keyState == 0)
+	{
+		XMStoreFloat4x4(&_world, XMMatrixTranslation(eyex, eyey - 1.5f, eyez));
+	}
+	if (keyState == 1)
+	{
+		XMStoreFloat4x4(&_world, XMMatrixTranslation(eyex - (moveX * 200), eyey, eyez - (moveZ * 200)));
+	}
+	XMStoreFloat4x4(&_world2, XMMatrixScaling(10.0f, 1.0f, 10.0f));
+
+	/*CreateDDSTextureFromFile(_pd3dDevice, L"Crate_COLOR.dds", nullptr, &_pTextureRV);*/
+
+	CreateDDSTextureFromFile(_pd3dDevice, L"asphalt.dds", nullptr, &_pTextureRV);
+
+	_pImmediateContext->PSSetShaderResources(0, 1, &_pTextureRV);
+
+	_pImmediateContext->PSSetSamplers(0, 1, &_pSamplerLinear);
 }
 
 void Application::Draw()
@@ -588,22 +872,22 @@ void Application::Draw()
 	lightDirection = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 	//diffuse material properties
-	diffuseMaterial = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	diffuseMaterial = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 
 	//diffuse light colour
 	diffuseLight = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//ambient material
-	ambientMaterial = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0);
+	ambientMaterial = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0);
 
 	//ambient light
 	ambientLight = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0);
 	
 	//specular light
-	specularLight = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	specularLight = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 
 	//specular material
-	specularMaterial = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	specularMaterial = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
 
 	//specular power
 	specularPower = FLOAT(5.0f);
